@@ -1,0 +1,19 @@
+{
+  "name": "inversiones-service",
+  "version": "1.0.0",
+  "description": "Inversiones VIP con modelo Bell-LaPadula — SecureBankito",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "seed": "node db/seed.js"
+  },
+  "dependencies": {
+    "decimal.js": "^10.4.3",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.11.3",
+"uuid": "^9.0.0"
+  }
+}
