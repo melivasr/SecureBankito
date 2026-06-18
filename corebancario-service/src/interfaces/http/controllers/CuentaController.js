@@ -1,3 +1,5 @@
+const BibaViolationException = require('../../../domain/exceptions/BibaViolationException');
+
 class CuentaController {
   constructor(crearCuentaUseCase, cuentaRepository, transaccionRepository) {
     this._crearCuentaUseCase = crearCuentaUseCase;
@@ -7,9 +9,20 @@ class CuentaController {
 
   async crear(req, res) {
     try {
-      const result = await this._crearCuentaUseCase.execute(req.body);
+      const result = await this._crearCuentaUseCase.execute({
+        ...req.body,
+        userClaims: req.user,
+      });
       return res.status(201).json(result);
     } catch (err) {
+      if (err instanceof BibaViolationException) {
+        return res.status(403).json({
+          error: 'BIBA_VIOLATION',
+          message: 'No Write Up: el proceso no tiene integridad suficiente para crear esta cuenta',
+          procesoIntegrity: err.procesoIntegrity,
+          cuentaRequiredIntegrity: err.cuentaRequiredIntegrity,
+        });
+      }
       if (err.message.includes('invalido') || err.message.includes('requerido')) {
         return res.status(400).json({ error: 'VALIDATION_ERROR', message: err.message });
       }

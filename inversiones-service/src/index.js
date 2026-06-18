@@ -1,9 +1,11 @@
 require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
 const initDb = require('./infrastructure/initDb');
 const activoRoutes = require('./interfaces/http/routes/activoRoutes');
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 app.use('/activos-vip', activoRoutes);
