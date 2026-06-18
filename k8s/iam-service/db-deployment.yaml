@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iam-postgres
+  namespace: securebankito
+  labels:
+    app: iam-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iam-postgres
+  template:
+    metadata:
+      labels:
+        app: iam-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: iam-config
+                  key: POSTGRES_DB
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: iam-config
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: iam-secret
+                  key: POSTGRES_PASSWORD
+          volumeMounts:
+            - name: iam-postgres-data
+              mountPath: /var/lib/postgresql/data
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "iam_user", "-d", "iam_db"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 10
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
+      volumes:
+        - name: iam-postgres-data
+          persistentVolumeClaim:
+            claimName: iam-postgres-data
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: iam-postgres-data
+  namespace: securebankito
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+# Service name "iam-postgres" coincide exactamente con el hostname
+# que usa DATABASE_URL en el docker-compose
+apiVersion: v1
+kind: Service
+metadata:
+  name: iam-postgres
+  namespace: securebankito
+spec:
+  selector:
+    app: iam-postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
