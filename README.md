@@ -165,9 +165,3 @@ Authorization: Bearer <TOKEN>
 Con `usuario_plata` debe responder `403 BLP_VIOLATION`. Con `usuario_oro` debe responder `200`.
 
 ---
-
-## PoC
-
-```bash
-bash scripts/poc-test.sh
-```
