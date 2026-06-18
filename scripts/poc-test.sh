@@ -45,7 +45,14 @@ cuentas = json.load(sys.stdin)
 cuenta = next((c for c in cuentas if c['requiredIntegrityLevel'] == 3), None)
 print(cuenta['cuentaId'] if cuenta else 'NOT_FOUND')
 ")
+ID_CUENTA_BRONCE=$(echo "$CUENTAS" | python3 -c "
+import sys, json
+cuentas = json.load(sys.stdin)
+cuenta = next((c for c in cuentas if c['requiredIntegrityLevel'] == 1), None)
+print(cuenta['cuentaId'] if cuenta else 'NOT_FOUND')
+")
 echo "  ID Cuenta VIP Oro: $ID_CUENTA_ORO"
+echo "  ID Cuenta Bronce: $ID_CUENTA_BRONCE"
 
 echo ""
 echo "============================================================"
@@ -57,6 +64,14 @@ curl -s -X POST "$CORE/transferencias" \
   -H "Authorization: Bearer $TOKEN_BRONCE" \
   -H "Content-Type: application/json" \
   -d "{\"cuentaDestinoId\":\"$ID_CUENTA_ORO\",\"monto\":500,\"moneda\":\"USD\"}" \
+  | python3 -m json.tool
+echo ""
+
+echo "--- Bronce intenta debitar Cuenta VIP Oro hacia Cuenta Bronce ---"
+curl -s -X POST "$CORE/transferencias" \
+  -H "Authorization: Bearer $TOKEN_BRONCE" \
+  -H "Content-Type: application/json" \
+  -d "{\"cuentaOrigenId\":\"$ID_CUENTA_ORO\",\"cuentaDestinoId\":\"$ID_CUENTA_BRONCE\",\"monto\":100,\"moneda\":\"USD\"}" \
   | python3 -m json.tool
 echo ""
 

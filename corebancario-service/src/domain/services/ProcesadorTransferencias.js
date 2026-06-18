@@ -2,14 +2,21 @@ const Transaccion = require('../entities/Transaccion');
 const BibaViolationException = require('../exceptions/BibaViolationException');
 
 class ProcesadorTransferencias {
-  ejecutarTransferencia(proceso, cuentaOrigen, cuentaDestino, monto) {
-    if (!proceso.integrity.esSuficienteParaEscribir(cuentaDestino.requiredIntegrityLevel)) {
+  _validarPuedeModificar(proceso, cuenta) {
+    if (!proceso.integrity.esSuficienteParaEscribir(cuenta.requiredIntegrityLevel)) {
       throw new BibaViolationException(
         proceso.integrity.valor,
-        cuentaDestino.requiredIntegrityLevel.valor,
+        cuenta.requiredIntegrityLevel.valor,
         proceso.ejecutadoPor
       );
     }
+  }
+
+  ejecutarTransferencia(proceso, cuentaOrigen, cuentaDestino, monto) {
+    if (cuentaOrigen) {
+      this._validarPuedeModificar(proceso, cuentaOrigen);
+    }
+    this._validarPuedeModificar(proceso, cuentaDestino);
 
     if (cuentaOrigen) {
       cuentaOrigen.debitar(monto);
