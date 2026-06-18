@@ -114,6 +114,58 @@ Modelo **Bell-LaPadula** - No Read Up.
 
 ---
 
+## Ejemplos de pruebas
+
+### Login
+
+```http
+POST http://127.0.0.1:3001/auth/login
+```
+
+```json
+{
+  "username": "usuario_oro",
+  "password": "pass123"
+}
+```
+
+La respuesta incluye un `token`. Usarlo como Bearer Token en los endpoints protegidos.
+
+### Listar cuentas
+
+```http
+GET http://127.0.0.1:3002/cuentas
+Authorization: Bearer <TOKEN>
+```
+
+Copiar el `cuentaId` real de la respuesta para usarlo en transferencias.
+
+### Transferencia
+
+```http
+POST http://127.0.0.1:3002/transferencias
+Authorization: Bearer <TOKEN>
+```
+
+```json
+{
+  "cuentaDestinoId": "<CUENTA_ID>",
+  "monto": 500,
+  "moneda": "USD"
+}
+```
+
+### Listar activos VIP
+
+```http
+GET http://127.0.0.1:3003/activos-vip
+Authorization: Bearer <TOKEN>
+```
+
+Con `usuario_plata` debe responder `403 BLP_VIOLATION`. Con `usuario_oro` debe responder `200`.
+
+---
+
 ## PoC
 
 ```bash
