@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: corebancario-service
+  namespace: securebankito
+  labels:
+    app: corebancario-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: corebancario-service
+  template:
+    metadata:
+      labels:
+        app: corebancario-service
+    spec:
+      containers:
+        - name: corebancario-service
+          image: securebankito/corebancario-service:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 3002
+          env:
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: corebancario-config
+                  key: PORT
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: corebancario-secret
+                  key: DATABASE_URL
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: corebancario-secret
+                  key: JWT_SECRET
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3002
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3002
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: corebancario-service
+  namespace: securebankito
+spec:
+  selector:
+    app: corebancario-service
+  ports:
+    - port: 3002
+      targetPort: 3002
+      nodePort: 30002   # equivalente al "4002:3002" del docker-compose
+  type: NodePort
