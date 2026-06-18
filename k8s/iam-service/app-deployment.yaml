@@ -67,7 +67,6 @@ spec:
   selector:
     app: iam-service
   ports:
-    - port: 3001        # puerto interno del cluster
+    - port: 3001
       targetPort: 3001
-      nodePort: 30001   # equivalente al "4001:3001" del docker-compose
-  type: NodePort
+  type: ClusterIP

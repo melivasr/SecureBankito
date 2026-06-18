@@ -8,6 +8,55 @@ Sistema bancario con microservicios que implementa los modelos de seguridad **Bi
 docker compose up -d --build
 ```
 
+## Ejecucion con Kubernetes
+
+Requisitos:
+
+- Docker Desktop
+- Minikube
+- kubectl
+- PowerShell
+
+Desde la raiz del proyecto, ejecutar:
+
+```powershell
+.\k8s\deploy.ps1
+```
+
+URLs locales para Postman:
+
+```text
+http://127.0.0.1:3001/health
+http://127.0.0.1:3002/health
+http://127.0.0.1:3003/health
+```
+
+Si solo se quieren abrir los port-forwards sin redeploy:
+
+```powershell
+.\k8s\port-forward-all.ps1
+```
+
+Verificar los pods:
+
+```powershell
+kubectl get pods -n securebankito
+```
+
+Verificar los servicios:
+
+```powershell
+kubectl get svc -n securebankito
+```
+
+El despliegue ejecuta las semillas automaticamente. Para ejecutarlas manualmente:
+
+```powershell
+kubectl exec -n securebankito deployment/iam-service -- node db/seed.js
+kubectl exec -n securebankito deployment/corebancario-service -- node db/seed.js
+kubectl exec -n securebankito deployment/inversiones-service -- node db/seed.js
+```
+
 ### Seeds
 
 ```bash
@@ -20,7 +69,7 @@ docker compose exec inversiones-service node db/seed.js
 
 ## Endpoints
 
-### IAM Service - `http://localhost:4001`
+### IAM Service - `http://localhost:3001`
 
 | Método | Endpoint         | Auth | Descripción                  |
 |--------|-----------------|------|------------------------------|
@@ -29,7 +78,7 @@ docker compose exec inversiones-service node db/seed.js
 | GET    | `/auth/validate` | Si   | Validar token                |
 | GET    | `/health`        | No   | Health check                 |
 
-### Core Bancario Service - `http://localhost:4002`
+### Core Bancario Service - `http://localhost:3002`
 
 Modelo **Biba** - No Write Up.
 
@@ -42,7 +91,7 @@ Modelo **Biba** - No Write Up.
 | POST   | `/transferencias`                  | Si   | Ejecutar transferencia       |
 | GET    | `/health`                          | No   | Health check                 |
 
-### Inversiones Service - `http://localhost:4003`
+### Inversiones Service - `http://localhost:3003`
 
 Modelo **Bell-LaPadula** - No Read Up.
 

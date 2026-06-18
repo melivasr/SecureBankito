@@ -4,9 +4,9 @@
 
 set -e
 
-IAM="http://localhost:4001"
-CORE="http://localhost:4002"
-INV="http://localhost:4003"
+IAM="http://localhost:3001"
+CORE="http://localhost:3002"
+INV="http://localhost:3003"
 
 echo "============================================================"
 echo " SecureBankito — PoC Test"

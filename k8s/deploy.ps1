@@ -166,6 +166,21 @@ Assert-LastExit 'corebancario-service rollout'
 kubectl rollout status deployment/inversiones-service  -n securebankito --timeout=120s
 Assert-LastExit 'inversiones-service rollout'
 
+# --- RUN SEEDS ----------------------------------------------------------------
+
+Write-Host ''
+Write-Host 'Running database seeds inside service pods...'
+$seedCommands = @(
+    @{ Name = 'iam-service' },
+    @{ Name = 'corebancario-service' },
+    @{ Name = 'inversiones-service' }
+)
+
+foreach ($seed in $seedCommands) {
+    kubectl exec -n securebankito "deployment/$($seed.Name)" -- node db/seed.js
+    Assert-LastExit "seed $($seed.Name)"
+}
+
 # ─── DONE ─────────────────────────────────────────────────────────────────────
 
 Write-Host ''
@@ -173,7 +188,8 @@ Write-Host 'Done. Current pods:'
 kubectl get pods -n securebankito -o wide
 
 Write-Host ''
-Write-Host 'Service URLs:'
-Write-Host "  IAM Service:          $(minikube service iam-service          -n securebankito --url)"
-Write-Host "  Core Bancario:        $(minikube service corebancario-service -n securebankito --url)"
-Write-Host "  Inversiones:          $(minikube service inversiones-service  -n securebankito --url)"
+Write-Host 'Opening local port-forwards for Postman...'
+& (Join-Path $PSScriptRoot 'port-forward-all.ps1')
+
+Write-Host ''
+Write-Host 'System ready for local tests.'
