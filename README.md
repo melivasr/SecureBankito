@@ -2,6 +2,12 @@
 
 Sistema bancario con microservicios que implementa los modelos de seguridad **Biba** y **Bell-LaPadula**.
 
+## Diagramas en DrawIO
+
+https://drive.google.com/file/d/1dGvU6_Yr_M4P450-hCAwcYiWD_fWELrI/view?usp=sharing
+
+https://drive.google.com/file/d/1bNJNPIbCPy_Wr064Mw9pEiTnKJvfC1MH/view?usp=drive_link
+
 ## Ejecución
 
 ```bash
