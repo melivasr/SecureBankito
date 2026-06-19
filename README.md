@@ -2,17 +2,51 @@
 
 Sistema bancario con microservicios que implementa los modelos de seguridad **Biba** y **Bell-LaPadula**.
 
-## Diagramas en DrawIO
+## Diagramas 
 
-https://drive.google.com/file/d/1dGvU6_Yr_M4P450-hCAwcYiWD_fWELrI/view?usp=sharing
+| Diagrama | Archivo |
+|---|---|
+| Arquitectura general | [docs/diagramas/arquitecture.svg](docs/diagramas/arquitecture.svg) |
+| DDD IAM | [docs/diagramas/SoADDD_IAM.drawio.svg](docs/diagramas/SoADDD_IAM.drawio.svg) |
+| DDD Core Bancario | [docs/diagramas/SoADDDCoreBanco.drawio.svg](docs/diagramas/SoADDDCoreBanco.drawio.svg) |
+| DDD Inversiones | [docs/diagramas/SoADDDInversion.drawio.svg](docs/diagramas/SoADDDInversion.drawio.svg) |
+| Flujo Escenario A | [docs/diagramas/SoAFlujoI.drawio.svg](docs/diagramas/SoAFlujoI.drawio.svg) |
+| Flujo Escenario B | [docs/diagramas/SoAFlujoII.drawio.svg](docs/diagramas/SoAFlujoII.drawio.svg) |
+| Flujo de Escenario Exitoso | [docs/diagramas/SoAFlujoIII.drawio.svg](docs/diagramas/SoAFlujoIII.drawio.svg) |
 
-https://drive.google.com/file/d/1bNJNPIbCPy_Wr064Mw9pEiTnKJvfC1MH/view?usp=drive_link
+## Arquitectura de SecureBankito
 
-## Ejecución
+Este diagrama muestra la arquitectura del proyecto en terminos de servicios y bases de datos.
 
-```bash
-docker compose up -d --build
-```
+![Arquitectura general](docs/diagramas/arquitecture.svg)
+
+### Servicios y bases de datos
+
+| Servicio | URL local | Base de datos | Responsabilidad |
+|---|---:|---|---|---|
+| `iam-service` | `http://127.0.0.1:3001` | `iam_db` | Registro, login, validacion de JWT |
+| `corebancario-service` | `http://127.0.0.1:3002` | `corebancario_db` |  Cuentas y transferencias con modelo Biba |
+| `inversiones-service` | `http://127.0.0.1:3003` | `inversiones_db` | Activos VIP con modelo Bell-LaPadula |
+
+- Cada microservicio tiene su propia base PostgreSQL independiente.
+- No hay una base de datos compartida entre servicios.
+- IAM emite el JWT y los otros servicios validan ese token con el mismo `JWT_SECRET`.
+- El acceso desde la maquina local se hace con `kubectl port-forward` hacia los servicios `ClusterIP`.
+
+### Sobre API Gateway
+
+Esta implementacion no usa API Gateway porque se enfoca en demostrar tres dominios desacoplados, aislamiento de datos y reglas de seguridad aplicadas.
+
+En esta arquitectura se consume directamente cada microservicio por su puerto local:
+
+- IAM: `http://127.0.0.1:3001`
+- Core Bancario: `http://127.0.0.1:3002`
+- Inversiones: `http://127.0.0.1:3003`
+
+La autenticacion se centraliza en IAM mediante JWT, pero las reglas criticas no dependen de una capa externa:
+
+- Core Bancario valida Biba dentro del dominio antes de crear cuentas o ejecutar transferencias.
+- Inversiones valida Bell-LaPadula dentro del dominio antes de listar u obtener activos VIP.
 
 ## Ejecucion con Kubernetes
 
@@ -61,6 +95,12 @@ El despliegue ejecuta las semillas automaticamente. Para ejecutarlas manualmente
 kubectl exec -n securebankito deployment/iam-service -- node db/seed.js
 kubectl exec -n securebankito deployment/corebancario-service -- node db/seed.js
 kubectl exec -n securebankito deployment/inversiones-service -- node db/seed.js
+```
+
+## Ejecución con docker
+
+```bash
+docker compose up -d --build
 ```
 
 ### Seeds
