@@ -13,6 +13,7 @@ Sistema bancario con microservicios que implementa los modelos de seguridad **Bi
 | Flujo Escenario B | [docs/diagramas/SoAFlujoII.drawio.svg](docs/diagramas/SoAFlujoII.drawio.svg) |
 | Flujo de Escenario Exitoso | [docs/diagramas/SoAFlujoIII.drawio.svg](docs/diagramas/SoAFlujoIII.drawio.svg) |
 | Justificación de diseño | [docs/Diseño_SOA.pdf](docs/Diseño_SOA.pdf) |
+| Documentación de la API | [docs/openapi.yaml](docs/openapi.yaml) |
 
 ## Arquitectura de SecureBankito
 
