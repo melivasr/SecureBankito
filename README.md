@@ -24,7 +24,7 @@ Este diagrama muestra la arquitectura del proyecto en terminos de servicios y ba
 ### Servicios y bases de datos
 
 | Servicio | URL local | Base de datos | Responsabilidad |
-|---|---:|---|---|---|
+|---|---:|---|---|
 | `iam-service` | `http://127.0.0.1:3001` | `iam_db` | Registro, login, validacion de JWT |
 | `corebancario-service` | `http://127.0.0.1:3002` | `corebancario_db` |  Cuentas y transferencias con modelo Biba |
 | `inversiones-service` | `http://127.0.0.1:3003` | `inversiones_db` | Activos VIP con modelo Bell-LaPadula |
