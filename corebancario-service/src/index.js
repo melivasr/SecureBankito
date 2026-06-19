@@ -1,10 +1,12 @@
 require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
 const initDb = require('./infrastructure/initDb');
 const cuentaRoutes = require('./interfaces/http/routes/cuentaRoutes');
 const transferenciaRoutes = require('./interfaces/http/routes/transferenciaRoutes');
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 app.use('/cuentas', cuentaRoutes);

@@ -54,7 +54,7 @@ services:
   iam-service:
     build: ./iam-service
     ports:
-      - "4001:3001"
+      - "3001:3001"
     environment:
       PORT: 3001
       DATABASE_URL: postgresql://iam_user:iam_pass@iam-postgres:5432/iam_db
@@ -66,7 +66,7 @@ services:
   corebancario-service:
     build: ./corebancario-service
     ports:
-      - "4002:3002"
+      - "3002:3002"
     environment:
       PORT: 3002
       DATABASE_URL: postgresql://core_user:core_pass@core-postgres:5432/corebancario_db
@@ -78,7 +78,7 @@ services:
   inversiones-service:
     build: ./inversiones-service
     ports:
-      - "4003:3003"
+      - "3003:3003"
     environment:
       PORT: 3003
       DATABASE_URL: postgresql://inv_user:inv_pass@inversiones-postgres:5432/inversiones_db

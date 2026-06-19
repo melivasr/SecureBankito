@@ -1,0 +1,925 @@
+openapi: 3.0.3
+info:
+  title: SecureBankito Microservices API
+  version: "1.0.0"
+  description: |
+    Documentacion OpenAPI de SecureBankito.
+
+    El sistema esta compuesto por tres microservicios:
+    - IAM Service: autenticacion, registro y validacion de JWT.
+    - Core Bancario Service: cuentas y transferencias protegidas por el modelo Biba.
+    - Inversiones Service: activos VIP protegidos por el modelo Bell-LaPadula.
+
+    Los endpoints protegidos requieren un token JWT enviado como Bearer Token.
+
+servers:
+  - url: http://127.0.0.1:3001
+    description: IAM Service
+  - url: http://127.0.0.1:3002
+    description: Core Bancario Service
+  - url: http://127.0.0.1:3003
+    description: Inversiones Service
+
+tags:
+  - name: Health
+    description: Verificacion de estado de cada microservicio.
+  - name: IAM
+    description: Registro, login y validacion de tokens.
+  - name: Core Bancario
+    description: Gestion de cuentas y transferencias con control de integridad Biba.
+  - name: Inversiones
+    description: Gestion de activos VIP con control Bell-LaPadula.
+
+paths:
+  /health:
+    servers:
+      - url: http://127.0.0.1:3001
+        description: IAM Service
+      - url: http://127.0.0.1:3002
+        description: Core Bancario Service
+      - url: http://127.0.0.1:3003
+        description: Inversiones Service
+    get:
+      tags:
+        - Health
+      summary: Health check del microservicio
+      description: |
+        Disponible en los tres microservicios. La respuesta cambia el valor de `service`
+        segun el puerto usado.
+      operationId: healthCheck
+      security: []
+      responses:
+        "200":
+          description: Servicio disponible.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+              examples:
+                iam:
+                  summary: IAM Service
+                  value:
+                    status: ok
+                    service: iam-service
+                core:
+                  summary: Core Bancario Service
+                  value:
+                    status: ok
+                    service: corebancario-service
+                inversiones:
+                  summary: Inversiones Service
+                  value:
+                    status: ok
+                    service: inversiones-service
+
+  /auth/register:
+    servers:
+      - url: http://127.0.0.1:3001
+        description: IAM Service
+    post:
+      tags:
+        - IAM
+      summary: Registrar usuario
+      operationId: registerUser
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterUserRequest"
+            examples:
+              usuarioOro:
+                value:
+                  username: usuario_oro
+                  mail: oro@bank.com
+                  password: pass123
+                  clearance: ORO
+                  integrity: 3
+      responses:
+        "201":
+          description: Usuario registrado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "409":
+          description: El usuario ya existe.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: USER_ALREADY_EXISTS
+                message: Usuario ya existe
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /auth/login:
+    servers:
+      - url: http://127.0.0.1:3001
+        description: IAM Service
+    post:
+      tags:
+        - IAM
+      summary: Iniciar sesion
+      operationId: loginUser
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+            examples:
+              usuarioSeed:
+                value:
+                  username: usuario_oro
+                  password: pass123
+      responses:
+        "200":
+          description: Login correcto. Retorna JWT.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          description: Credenciales invalidas.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: INVALID_CREDENTIALS
+                message: Credenciales invalidas
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /auth/validate:
+    servers:
+      - url: http://127.0.0.1:3001
+        description: IAM Service
+    get:
+      tags:
+        - IAM
+      summary: Validar token JWT
+      operationId: validateToken
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Token valido.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidateTokenResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /cuentas:
+    servers:
+      - url: http://127.0.0.1:3002
+        description: Core Bancario Service
+    post:
+      tags:
+        - Core Bancario
+      summary: Crear cuenta bancaria
+      operationId: createAccount
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAccountRequest"
+            example:
+              titular: Cuenta Plata
+              saldoInicial: 50000
+              moneda: USD
+              requiredIntegrityLevel: 2
+      responses:
+        "201":
+          description: Cuenta creada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: Violacion de seguridad Biba al intentar crear una cuenta con mayor nivel de integridad.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BibaViolationResponse"
+              example:
+                error: BIBA_VIOLATION
+                message: "No Write Up: el proceso no tiene integridad suficiente para crear esta cuenta"
+                procesoIntegrity: 2
+                cuentaRequiredIntegrity: 3
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+    get:
+      tags:
+        - Core Bancario
+      summary: Listar cuentas bancarias
+      operationId: listAccounts
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Lista de cuentas.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Account"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /cuentas/{cuentaId}:
+    servers:
+      - url: http://127.0.0.1:3002
+        description: Core Bancario Service
+    get:
+      tags:
+        - Core Bancario
+      summary: Obtener cuenta por ID
+      operationId: getAccountById
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CuentaId"
+      responses:
+        "200":
+          description: Cuenta encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Cuenta no encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: CUENTA_NOT_FOUND
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /cuentas/{cuentaId}/transacciones:
+    servers:
+      - url: http://127.0.0.1:3002
+        description: Core Bancario Service
+    get:
+      tags:
+        - Core Bancario
+      summary: Listar transacciones de una cuenta
+      operationId: listAccountTransactions
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CuentaId"
+      responses:
+        "200":
+          description: Historial de transacciones.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /transferencias:
+    servers:
+      - url: http://127.0.0.1:3002
+        description: Core Bancario Service
+    post:
+      tags:
+        - Core Bancario
+      summary: Ejecutar transferencia o deposito
+      description: |
+        Si `cuentaOrigenId` se omite, la operacion se interpreta como deposito externo.
+        El modelo Biba aplica la regla No Write Up: el usuario debe tener integridad
+        igual o superior al `requiredIntegrityLevel` de la cuenta modificada.
+      operationId: executeTransfer
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransferRequest"
+            examples:
+              deposito:
+                summary: Deposito externo
+                value:
+                  cuentaDestinoId: 22222222-2222-4222-8222-222222222222
+                  monto: 500
+                  moneda: USD
+              transferencia:
+                summary: Transferencia entre cuentas
+                value:
+                  cuentaOrigenId: 33333333-3333-4333-8333-333333333333
+                  cuentaDestinoId: 22222222-2222-4222-8222-222222222222
+                  monto: 500
+                  moneda: USD
+      responses:
+        "200":
+          description: Transferencia ejecutada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransferResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: Violacion de seguridad Biba.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BibaViolationResponse"
+        "404":
+          description: Cuenta destino no encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: CUENTA_DESTINO_NOT_FOUND
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /activos-vip:
+    servers:
+      - url: http://127.0.0.1:3003
+        description: Inversiones Service
+    get:
+      tags:
+        - Inversiones
+      summary: Listar activos VIP
+      description: |
+        Requiere clearance ORO. El modelo Bell-LaPadula aplica No Read Up.
+      operationId: listVipAssets
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Lista de activos VIP.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Asset"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/BlpViolation"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+    post:
+      tags:
+        - Inversiones
+      summary: Crear activo VIP
+      description: Requiere clearance ORO.
+      operationId: createVipAsset
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAssetRequest"
+            example:
+              nombre: Fondo Reserva Oro Alpha
+              descripcion: Fondo exclusivo de alto rendimiento VIP
+              rendimientoAnual: 15.5
+              montoMin: 500000
+              rentabilidad:
+                porcentaje: 15.5
+                plazo: 24
+      responses:
+        "201":
+          description: Activo VIP creado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Asset"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/BlpViolation"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /activos-vip/{activoId}:
+    servers:
+      - url: http://127.0.0.1:3003
+        description: Inversiones Service
+    get:
+      tags:
+        - Inversiones
+      summary: Obtener activo VIP por ID
+      description: |
+        Requiere clearance ORO. Si el usuario no tiene clearance suficiente,
+        responde 403 antes de consultar si el activo existe.
+      operationId: getVipAssetById
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ActivoId"
+      responses:
+        "200":
+          description: Activo VIP encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Asset"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/BlpViolation"
+        "404":
+          description: Activo no encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: ACTIVO_NOT_FOUND
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    CuentaId:
+      name: cuentaId
+      in: path
+      required: true
+      description: UUID de la cuenta bancaria.
+      schema:
+        type: string
+        format: uuid
+    ActivoId:
+      name: activoId
+      in: path
+      required: true
+      description: UUID del activo VIP.
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    Unauthorized:
+      description: Token ausente, invalido o expirado.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            missing:
+              value:
+                error: TOKEN_MISSING
+                message: Authorization header requerido
+            invalid:
+              value:
+                error: TOKEN_INVALID_OR_EXPIRED
+                message: Token invalido o expirado
+    ValidationError:
+      description: Error de validacion.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error: VALIDATION_ERROR
+            message: Campo requerido o valor invalido
+    InternalError:
+      description: Error interno del servidor.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error: INTERNAL_ERROR
+            message: Error interno
+    BlpViolation:
+      description: Violacion de seguridad Bell-LaPadula.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/BlpViolationResponse"
+
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - service
+      properties:
+        status:
+          type: string
+          example: ok
+        service:
+          type: string
+          example: iam-service
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          example: INTERNAL_ERROR
+        message:
+          type: string
+          example: Error interno
+
+    Clearance:
+      type: string
+      enum:
+        - BRONCE
+        - PLATA
+        - ORO
+      example: ORO
+
+    Integrity:
+      type: integer
+      enum:
+        - 1
+        - 2
+        - 3
+      example: 3
+
+    RegisterUserRequest:
+      type: object
+      required:
+        - username
+        - mail
+        - password
+        - clearance
+        - integrity
+      properties:
+        username:
+          type: string
+          example: usuario_oro
+        mail:
+          type: string
+          format: email
+          example: oro@bank.com
+        password:
+          type: string
+          format: password
+          example: pass123
+        clearance:
+          $ref: "#/components/schemas/Clearance"
+        integrity:
+          $ref: "#/components/schemas/Integrity"
+
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: usuario_oro
+        password:
+          type: string
+          format: password
+          example: pass123
+
+    LoginResponse:
+      type: object
+      required:
+        - token
+        - clearance
+        - integrity
+      properties:
+        token:
+          type: string
+          description: JWT para usar como Bearer Token.
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        clearance:
+          $ref: "#/components/schemas/Clearance"
+        integrity:
+          $ref: "#/components/schemas/Integrity"
+
+    ValidateTokenResponse:
+      type: object
+      required:
+        - valid
+        - userId
+        - username
+        - clearance
+        - integrity
+      properties:
+        valid:
+          type: boolean
+          example: true
+        userId:
+          type: string
+          format: uuid
+        username:
+          type: string
+          example: usuario_oro
+        clearance:
+          $ref: "#/components/schemas/Clearance"
+        integrity:
+          $ref: "#/components/schemas/Integrity"
+
+    User:
+      type: object
+      required:
+        - userId
+        - username
+        - mail
+        - clearance
+        - integrity
+      properties:
+        userId:
+          type: string
+          format: uuid
+        username:
+          type: string
+          example: usuario_oro
+        mail:
+          type: string
+          format: email
+        clearance:
+          $ref: "#/components/schemas/Clearance"
+        integrity:
+          $ref: "#/components/schemas/Integrity"
+
+    CreateAccountRequest:
+      type: object
+      required:
+        - titular
+        - saldoInicial
+        - requiredIntegrityLevel
+      properties:
+        titular:
+          type: string
+          example: Cuenta Plata
+        saldoInicial:
+          type: number
+          minimum: 0
+          example: 50000
+        moneda:
+          type: string
+          default: USD
+          example: USD
+        requiredIntegrityLevel:
+          $ref: "#/components/schemas/Integrity"
+
+    Account:
+      type: object
+      required:
+        - cuentaId
+        - titular
+        - saldo
+        - moneda
+        - requiredIntegrityLevel
+      properties:
+        cuentaId:
+          type: string
+          format: uuid
+          example: 22222222-2222-4222-8222-222222222222
+        titular:
+          type: string
+          example: Cuenta Plata
+        saldo:
+          type: number
+          example: 50000
+        moneda:
+          type: string
+          example: USD
+        requiredIntegrityLevel:
+          $ref: "#/components/schemas/Integrity"
+
+    TransferRequest:
+      type: object
+      required:
+        - cuentaDestinoId
+        - monto
+      properties:
+        cuentaOrigenId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Si se omite, se ejecuta como deposito externo.
+          example: 33333333-3333-4333-8333-333333333333
+        cuentaDestinoId:
+          type: string
+          format: uuid
+          example: 22222222-2222-4222-8222-222222222222
+        monto:
+          type: number
+          minimum: 0
+          example: 500
+        moneda:
+          type: string
+          default: USD
+          example: USD
+
+    TransferResponse:
+      type: object
+      required:
+        - transaccionId
+        - estado
+        - timestamp
+      properties:
+        transaccionId:
+          type: string
+          format: uuid
+        estado:
+          type: string
+          example: EJECUTADA
+        timestamp:
+          type: string
+          format: date-time
+
+    Transaction:
+      type: object
+      properties:
+        transaccionId:
+          type: string
+          format: uuid
+        cuentaId:
+          type: string
+          format: uuid
+          example: 22222222-2222-4222-8222-222222222222
+        tipo:
+          type: string
+          enum:
+            - TRANSFERENCIA
+            - DEPOSITO
+            - BLOQUEADA
+          example: TRANSFERENCIA
+        monto:
+          type: number
+          example: 500
+        moneda:
+          type: string
+          example: USD
+        ejecutadoPor:
+          type: string
+          format: uuid
+        integrityUsada:
+          $ref: "#/components/schemas/Integrity"
+        resultado:
+          type: string
+          example: EXITOSA
+        auditTrail:
+          type: string
+          example: Recibido desde 33333333-3333-4333-8333-333333333333
+        timestamp:
+          type: string
+          format: date-time
+
+    BibaViolationResponse:
+      allOf:
+        - $ref: "#/components/schemas/ErrorResponse"
+        - type: object
+          required:
+            - procesoIntegrity
+            - cuentaRequiredIntegrity
+          properties:
+            error:
+              type: string
+              example: BIBA_VIOLATION
+            message:
+              type: string
+              example: "No Write Up: el proceso no tiene integridad suficiente para modificar esta cuenta"
+            procesoIntegrity:
+              $ref: "#/components/schemas/Integrity"
+            cuentaRequiredIntegrity:
+              $ref: "#/components/schemas/Integrity"
+
+    Rentabilidad:
+      type: object
+      required:
+        - porcentaje
+        - plazo
+      properties:
+        porcentaje:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          example: 15.5
+        plazo:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          description: Plazo expresado en meses.
+          example: 24
+
+    CreateAssetRequest:
+      type: object
+      required:
+        - nombre
+        - rendimientoAnual
+        - montoMin
+        - rentabilidad
+      properties:
+        nombre:
+          type: string
+          example: Fondo Reserva Oro Alpha
+        descripcion:
+          type: string
+          example: Fondo exclusivo de alto rendimiento VIP
+        rendimientoAnual:
+          type: number
+          example: 15.5
+        montoMin:
+          type: number
+          example: 500000
+        rentabilidad:
+          $ref: "#/components/schemas/Rentabilidad"
+
+    Asset:
+      type: object
+      required:
+        - activoId
+        - nombre
+        - descripcion
+        - rendimientoAnual
+        - montoMin
+        - clasificacion
+        - rentabilidad
+      properties:
+        activoId:
+          type: string
+          format: uuid
+          example: aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa
+        nombre:
+          type: string
+          example: Fondo Reserva Oro Alpha
+        descripcion:
+          type: string
+          example: Fondo exclusivo de alto rendimiento VIP
+        rendimientoAnual:
+          type: number
+          example: 15.5
+        montoMin:
+          type: number
+          example: 500000
+        clasificacion:
+          type: string
+          enum:
+            - ORO
+          example: ORO
+        rentabilidad:
+          $ref: "#/components/schemas/Rentabilidad"
+
+    BlpViolationResponse:
+      allOf:
+        - $ref: "#/components/schemas/ErrorResponse"
+        - type: object
+          required:
+            - usuarioClearance
+            - recursoClasificacion
+          properties:
+            error:
+              type: string
+              example: BLP_VIOLATION
+            message:
+              type: string
+              example: "No Read Up: clearance insuficiente para acceder a activos VIP"
+            usuarioClearance:
+              $ref: "#/components/schemas/Clearance"
+            recursoClasificacion:
+              type: string
+              enum:
+                - ORO
+              example: ORO

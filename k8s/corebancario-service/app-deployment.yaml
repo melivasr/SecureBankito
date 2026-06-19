@@ -69,5 +69,4 @@ spec:
   ports:
     - port: 3002
       targetPort: 3002
-      nodePort: 30002   # equivalente al "4002:3002" del docker-compose
-  type: NodePort
+  type: ClusterIP
