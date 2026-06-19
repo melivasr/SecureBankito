@@ -1,0 +1,93 @@
+services:
+  # ─── BASES DE DATOS (3 instancias completamente independientes) ─────────────
+
+  iam-postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: iam_db
+      POSTGRES_USER: iam_user
+      POSTGRES_PASSWORD: iam_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - iam-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U iam_user -d iam_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  core-postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: corebancario_db
+      POSTGRES_USER: core_user
+      POSTGRES_PASSWORD: core_pass
+    ports:
+      - "5433:5432"
+    volumes:
+      - core-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U core_user -d corebancario_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  inversiones-postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: inversiones_db
+      POSTGRES_USER: inv_user
+      POSTGRES_PASSWORD: inv_pass
+    ports:
+      - "5434:5432"
+    volumes:
+      - inversiones-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U inv_user -d inversiones_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ─── MICROSERVICIOS ─────────────────────────────────────────────────────────
+
+  iam-service:
+    build: ./iam-service
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      DATABASE_URL: postgresql://iam_user:iam_pass@iam-postgres:5432/iam_db
+      JWT_SECRET: securebankito-jwt-secret-2024
+    depends_on:
+      iam-postgres:
+        condition: service_healthy
+
+  corebancario-service:
+    build: ./corebancario-service
+    ports:
+      - "3002:3002"
+    environment:
+      PORT: 3002
+      DATABASE_URL: postgresql://core_user:core_pass@core-postgres:5432/corebancario_db
+      JWT_SECRET: securebankito-jwt-secret-2024
+    depends_on:
+      core-postgres:
+        condition: service_healthy
+
+  inversiones-service:
+    build: ./inversiones-service
+    ports:
+      - "3003:3003"
+    environment:
+      PORT: 3003
+      DATABASE_URL: postgresql://inv_user:inv_pass@inversiones-postgres:5432/inversiones_db
+      JWT_SECRET: securebankito-jwt-secret-2024
+    depends_on:
+      inversiones-postgres:
+        condition: service_healthy
+
+volumes:
+  iam-postgres-data:
+  core-postgres-data:
+  inversiones-postgres-data:
