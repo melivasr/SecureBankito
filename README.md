@@ -161,7 +161,7 @@ Modelo **Bell-LaPadula** - No Read Up.
 
 ---
 
-## Ejemplos de pruebas
+## Ejemplos para pruebas con Postman
 
 ### Login
 
