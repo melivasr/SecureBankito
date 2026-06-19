@@ -2,7 +2,7 @@
 
 Sistema bancario con microservicios que implementa los modelos de seguridad **Biba** y **Bell-LaPadula**.
 
-## Diagramas 
+## Diagramas y Justificación Diseño
 
 | Diagrama | Archivo |
 |---|---|
@@ -13,6 +13,7 @@ Sistema bancario con microservicios que implementa los modelos de seguridad **Bi
 | Flujo Escenario A | [docs/diagramas/SoAFlujoI.drawio.svg](docs/diagramas/SoAFlujoI.drawio.svg) |
 | Flujo Escenario B | [docs/diagramas/SoAFlujoII.drawio.svg](docs/diagramas/SoAFlujoII.drawio.svg) |
 | Flujo de Escenario Exitoso | [docs/diagramas/SoAFlujoIII.drawio.svg](docs/diagramas/SoAFlujoIII.drawio.svg) |
+| Justificación de diseño | [docs/Diseño_SOA.pdf](docs/Diseño_SOA.pdf) |
 
 ## Arquitectura de SecureBankito
 
