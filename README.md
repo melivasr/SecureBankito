@@ -6,8 +6,7 @@ Sistema bancario con microservicios que implementa los modelos de seguridad **Bi
 
 | Diagrama | Archivo |
 |---|---|
-| Arquitectura general | [docs/diagramas/arquitecture.svg](docs/diagramas/arquitecture.svg) |
-| DDD IAM | [docs/diagramas/SoADDD_IAM.drawio.svg](docs/diagramas/SoADDD_IAM.drawio.svg) |
+| DDD IAM | [docs/diagramas/SoADDD_IAM.drawio.svg](docs/diagramas/SoADDDIAM.drawio.svg) |
 | DDD Core Bancario | [docs/diagramas/SoADDDCoreBanco.drawio.svg](docs/diagramas/SoADDDCoreBanco.drawio.svg) |
 | DDD Inversiones | [docs/diagramas/SoADDDInversion.drawio.svg](docs/diagramas/SoADDDInversion.drawio.svg) |
 | Flujo Escenario A | [docs/diagramas/SoAFlujoI.drawio.svg](docs/diagramas/SoAFlujoI.drawio.svg) |
