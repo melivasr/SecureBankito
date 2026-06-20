@@ -1,5 +1,5 @@
 const pool = require('../db');
-const User = require('../../domain/entities/User');
+const User = require('../../domain/agregate/User');
 const ClearanceLevel = require('../../domain/valueObjects/ClearanceLevel');
 const IntegrityLevel = require('../../domain/valueObjects/IntegrityLevel');
 const Credenciales = require('../../domain/valueObjects/Credenciales');

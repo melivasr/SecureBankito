@@ -1,6 +1,6 @@
 const NivelIntegridad = require('../../domain/valueObjects/NivelIntegridad');
 const Dinero = require('../../domain/valueObjects/Dinero');
-const Transaccion = require('../../domain/entities/Transaccion');
+const Transaccion = require('../../domain/agregate/entities/Transaccion');
 const ProcesadorTransferencias = require('../../domain/services/ProcesadorTransferencias');
 const BibaViolationException = require('../../domain/exceptions/BibaViolationException');
 

@@ -1,5 +1,5 @@
 const { v4: uuidv4 } = require('uuid');
-const CuentaBancaria = require('../../domain/entities/CuentaBancaria');
+const CuentaBancaria = require('../../domain/agregate/entities/CuentaBancaria');
 const Dinero = require('../../domain/valueObjects/Dinero');
 const NivelIntegridad = require('../../domain/valueObjects/NivelIntegridad');
 const BibaViolationException = require('../../domain/exceptions/BibaViolationException');

@@ -2,7 +2,7 @@ const { v4: uuidv4 } = require('uuid');
 const NivelClasificacion = require('../../domain/valueObjects/NivelClasificacion');
 const ControlAccesoActivos = require('../../domain/services/ControlAccesoActivos');
 const BLPViolationException = require('../../domain/exceptions/BLPViolationException');
-const ActivoInversion = require('../../domain/entities/ActivoInversion');
+const ActivoInversion = require('../../domain/agregate/ActivoInversion');
 const Rentabilidad = require('../../domain/valueObjects/Rentabilidad');
 
 const controlAcceso = new ControlAccesoActivos();

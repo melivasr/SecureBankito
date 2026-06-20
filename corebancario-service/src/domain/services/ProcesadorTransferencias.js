@@ -1,4 +1,4 @@
-const Transaccion = require('../entities/Transaccion');
+const Transaccion = require('../agregate/entities/Transaccion');
 const BibaViolationException = require('../exceptions/BibaViolationException');
 
 class ProcesadorTransferencias {

@@ -1,5 +1,5 @@
 const pool = require('../db');
-const ActivoInversion = require('../../domain/entities/ActivoInversion');
+const ActivoInversion = require('../../domain/agregate/ActivoInversion');
 const Rentabilidad = require('../../domain/valueObjects/Rentabilidad');
 
 class ActivoRepository {
